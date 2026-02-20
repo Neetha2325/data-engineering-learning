@@ -42,4 +42,3 @@ with open('info.txt','r') as file:
 # Tells to write the contents from buffer to file
 file.flush()
 
-#8.file.seek(0)
