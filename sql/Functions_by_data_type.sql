@@ -155,3 +155,44 @@ event_desc like '%holiday%';
 Select event_desc,
 	regexp_substr(event_desc,'([A-Z][a-z]+(-[A-Za-z]+))+') as with_hypens
  from my_events;
+
+
+-- Remove apostrophes and replace spaces with hyphens
+-- Create new ID column called factory_product_id 
+With base_cte as 
+(	Select replace(replace(factory,"'",''),' ','-') as cleaned_factory_name,
+		product_id
+        from products
+)
+select cleaned_factory_name,product_id,
+concat(cleaned_factory_name,'|',product_id) as concatenated_result
+from base_cte;
+
+-- Only extract text after the hyphen for Wonka Bars
+Select product_name,
+		replace(product_name,'Wonka Bar -','') from products;
+        
+-- Alternative using substrings
+Select product_name,
+trim(substr(product_name,instr(product_name,'-')+1)) as substr_product_name
+ from products
+ where product_name like 'Wonka Bar -%';
+
+
+
+-- Replace division with Other value and top division
+With cte1 as (
+		Select factory,division,count(product_name) as count_column
+			from products
+			where division is not null
+			group by factory,division),
+cte2 as (select factory,division,count_column,
+				row_number() over(partition by factory) as row_column
+				from cte1),
+cte3 as (Select factory,division from cte2
+		where row_column=1)
+ select p.product_name,p.factory,p.division,
+coalesce(p.division,'Other') as divison_other,
+coalesce(p.division,c.division) as top_division
+from products p left join cte3 c
+on p.factory=c.factory;
