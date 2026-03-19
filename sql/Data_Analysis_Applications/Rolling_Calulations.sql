@@ -31,3 +31,23 @@ SELECT	 country, year, happiness_score,
 			   ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 3) AS row_num
 FROM 	 happiness_scores
 ORDER BY country, year;
+
+
+
+
+-- Add on the cumulative sum and 6 month moving average
+
+With base_cte as (
+Select year(o.order_date) as year,month(o.order_date) as month,
+sum(o.units*p.unit_price) as total_sales
+ from orders o left join products p
+on o.product_id=p.product_id
+group by year(o.order_date),month(o.order_date)
+order by year(o.order_date),month(o.order_date))
+
+select 
+year,month,total_sales,
+sum(total_sales) over(order by year,month) as cum_sales,
+round(avg(total_sales) over(order by year,month 
+							rows BETWEEN 5 PRECEDING and CURRENT ROW),2) as six_mnth_avg_sales
+from base_cte;
